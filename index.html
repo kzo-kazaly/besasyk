@@ -1,0 +1,2075 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Бес Асық</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+
+/* ══════════════════════════════════════
+   DESIGN TOKENS
+══════════════════════════════════════ */
+:root {
+  --amber:     #d97706;
+  --amber-lt:  #fbbf24;
+  --terra:     #b45309;
+  --teal:      #0d9488;
+  --teal-lt:   #5eead4;
+  --green:     #16a34a;
+  --red:       #dc2626;
+  --purple:    #7c3aed;
+  --text:      #1c1108;
+  --text-2:    #6b4c28;
+  --sh-sm:     0 2px 8px rgba(0,0,0,.10);
+  --sh-md:     0 4px 20px rgba(0,0,0,.16);
+  --r-pill:    999px;
+  --r-lg:      16px;
+  --throw-w:   130px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+
+/* PAGE — light diamond grid */
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #f4f0eb;
+  background-image:
+    radial-gradient(ellipse 80% 35% at 50% 0%, rgba(251,191,36,.10) 0%, transparent 65%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cpath d='M28 2L54 28L28 54L2 28Z' fill='none' stroke='rgba(180,120,40,.055)' stroke-width='1'/%3E%3C/svg%3E");
+  color: var(--text);
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════════
+   LEFT SIDEBAR
+══════════════════════════════════════ */
+#sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  height: 100vh;
+  background: rgba(255,252,246,.96);
+  border-right: 1.5px solid rgba(200,140,50,.18);
+  box-shadow: 3px 0 20px rgba(0,0,0,.08);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 12px 14px;
+  gap: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Stage badge in sidebar */
+#stage-badge {
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, var(--amber), var(--terra));
+  color: #fff;
+  border-radius: var(--r-pill);
+  padding: 5px 10px;
+  text-align: center;
+  box-shadow: var(--sh-sm);
+}
+
+/* HUD chips — vertical in sidebar */
+.hud {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.chip {
+  background: #fff;
+  border-radius: 10px;
+  padding: 6px 10px;
+  box-shadow: var(--sh-sm);
+  border: 1.5px solid rgba(217,119,6,.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.chip-lbl { font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-2); }
+.chip-val { font-size: 1.1rem; font-weight: 900; color: var(--text); }
+
+/* Level select circles grid */
+.sb-section-label {
+  font-size: .55rem;
+  font-weight: 700;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  padding: 0 2px;
+}
+
+.stage-dots {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+.dot {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #e8e0d4;
+  border: 2px solid #c8bead;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .62rem;
+  font-weight: 700;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background .2s, border-color .2s, transform .15s, color .2s;
+  position: relative;
+}
+.dot:hover { transform: scale(1.15); border-color: var(--amber); color: var(--amber); }
+.dot.done  { background: var(--green); border-color: #0f7a30; color: #fff; }
+.dot.active {
+  background: linear-gradient(135deg, var(--amber), var(--terra));
+  border-color: var(--terra);
+  color: #fff;
+  transform: scale(1.18);
+  box-shadow: 0 3px 10px rgba(217,119,6,.45);
+}
+
+/* Tooltip */
+.dot::after {
+  content: attr(data-name);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: #fff;
+  font-size: .55rem;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 3px 8px;
+  border-radius: 6px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+  z-index: 200;
+}
+.dot:hover::after { opacity: 1; }
+
+/* Sidebar buttons */
+.sb-btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: auto;
+}
+
+/* Time slider */
+.t-ctrl {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 8px 10px;
+  box-shadow: var(--sh-sm);
+  border: 1.5px solid rgba(13,148,136,.18);
+}
+.t-ctrl-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.t-lbl { font-size: .58rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--teal); white-space: nowrap; }
+#t-slider {
+  -webkit-appearance: none; appearance: none;
+  flex: 1; height: 4px;
+  background: linear-gradient(90deg, var(--teal-lt), var(--amber-lt));
+  border-radius: 99px; outline: none; cursor: pointer;
+}
+#t-slider:disabled { opacity: .38; cursor: default; }
+#t-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--teal); border: 2px solid #fff;
+  box-shadow: 0 2px 5px rgba(13,148,136,.4);
+  cursor: pointer; transition: transform .12s;
+}
+#t-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+#t-slider::-moz-range-thumb { width:16px;height:16px;border-radius:50%;background:var(--teal);border:2px solid #fff; }
+#t-val { font-size: .7rem; font-weight: 700; color: var(--teal); min-width: 42px; text-align: right; }
+
+/* Current rule mini panel inside sidebar */
+#rule-panel {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  background: rgba(217,119,6,.07);
+  border-radius: 10px;
+  padding: 8px 10px;
+  border: 1.5px solid rgba(217,119,6,.18);
+  font-size: .65rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.5;
+}
+#rule-icon { font-size: .85rem; flex-shrink: 0; margin-top: 1px; }
+#rule-text { flex: 1; }
+
+/* ══════════════════════════════════════
+   MAIN CONTENT AREA
+══════════════════════════════════════ */
+#main-content {
+  flex: 1;
+  min-width: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 10px 10px 10px;
+  gap: 6px;
+  overflow: hidden;
+}
+
+/* Title row at top of main content — LARGE, dominant, stays here always */
+.main-header {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 6px 4px 10px;
+  border-bottom: 1.5px solid rgba(200,140,50,.15);
+}
+.main-header h1 {
+  font-size: clamp(1.05rem, 2.2vw, 1.6rem);
+  font-weight: 900;
+  color: var(--terra);
+  text-align: center;
+  line-height: 1.3;
+  letter-spacing: -.01em;
+  text-shadow: 0 1px 0 rgba(255,255,255,.5);
+  margin-bottom: 3px;
+}
+.main-header .sub-title {
+  font-size: .68rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  display: block;
+  margin-top: 2px;
+}
+
+/* Message + bar row */
+.msg-bar-row {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+/* ── PLAY ZONE ── */
+.play-zone {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── GAME AREA ── */
+#game-area {
+  flex: 1; min-width: 0; position: relative;
+  background-image: url('backgr.png');
+  background-size: cover; background-position: center;
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-md);
+  border: 2px solid rgba(180,120,50,.22);
+  overflow: hidden;
+}
+#game-area::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: var(--r-lg);
+  box-shadow: inset 0 0 50px rgba(0,0,0,.28);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── GAME AREA ACTION BAR — bottom center of game area ── */
+#game-action-bar {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 50;
+  pointer-events: none; /* children handle clicks */
+}
+#game-action-bar button {
+  pointer-events: auto;
+  width: auto;
+  min-width: 120px;
+  padding: 12px 24px;
+  font-size: .92rem;
+  font-weight: 900;
+  letter-spacing: .07em;
+  border-radius: var(--r-pill);
+  border: none;
+  cursor: pointer;
+  transition: transform .12s, box-shadow .12s, opacity .2s;
+  box-shadow: 0 4px 18px rgba(0,0,0,.3);
+}
+#game-action-bar button:active:not(:disabled) { transform: scale(.95); }
+#game-action-bar button:disabled { opacity: .3; cursor: default; pointer-events: none; }
+
+#game-btn-throw {
+  background: linear-gradient(135deg, var(--amber), var(--terra));
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(217,119,6,.5), inset 0 1px 0 rgba(255,255,255,.18);
+}
+#game-btn-throw:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 26px rgba(217,119,6,.6);
+}
+#game-btn-catch {
+  background: linear-gradient(135deg, var(--teal), #0a7a70);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(13,148,136,.5);
+  display: none;
+}
+#game-btn-catch:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 26px rgba(13,148,136,.6);
+}
+#throw-area {
+  width: var(--throw-w); flex-shrink: 0; position: relative;
+  background: rgba(255,255,255,.55);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-sm);
+  border: 1.5px solid rgba(200,160,80,.22);
+  overflow: hidden;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+/* ── ACTION BUTTONS ROW ── */
+.btn-row {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+/* ── MSG ── */
+#msg {
+  font-size: clamp(1rem, 2.8vw, 1.25rem);
+  font-weight: 700; min-height: 26px; text-align: center;
+  color: var(--amber); letter-spacing: .02em;
+  transition: color .18s;
+}
+#msg.green  { color: var(--green); }
+#msg.red    { color: var(--red); }
+#msg.purple { color: var(--purple); }
+#msg.pulse  { animation: msg-pop .3s cubic-bezier(.34,1.56,.64,1); }
+@keyframes msg-pop {
+  0%   { transform: scale(.88); opacity: .5; }
+  100% { transform: scale(1);   opacity: 1;  }
+}
+
+/* ── Sub msg ── */
+#sub-msg {
+  font-size: .68rem; font-weight: 500; color: var(--text-2);
+  min-height: 16px; text-align: center;
+  font-style: italic;
+}
+
+/* ── Countdown bar ── */
+#bar-wrap {
+  width: min(420px, 80vw); height: 7px;
+  background: #ddd6cc; border-radius: 99px; overflow: hidden;
+  opacity: 0; transition: opacity .2s;
+}
+#bar-fill { height: 100%; width: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--teal), var(--amber-lt)); }
+
+/* Sidebar scrollbar */
+#sidebar::-webkit-scrollbar { width: 4px; }
+#sidebar::-webkit-scrollbar-track { background: transparent; }
+#sidebar::-webkit-scrollbar-thumb { background: rgba(200,140,50,.3); border-radius: 99px; }
+
+/* ══════════════════════════════════════
+   TOP BAR (legacy — hidden now)
+══════════════════════════════════════ */
+.top-bar { display: none; }
+h1 {
+  font-size: clamp(.85rem, 2.6vw, 1.2rem);
+  font-weight: 900;
+  color: var(--terra);
+  line-height: 1.3;
+  margin-bottom: 1px;
+  text-align: center;
+  max-width: 580px;
+}
+.sub-title {
+  font-size: .6rem;
+  font-weight: 500;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin-bottom: 8px;
+}
+
+/* ── Current rule mini-panel ── */
+#rule-panel {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 6px 14px;
+  box-shadow: var(--sh-sm);
+  border: 1.5px solid rgba(217,119,6,.2);
+  margin-bottom: 7px;
+  max-width: min(520px, 94vw);
+  font-size: .7rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.45;
+}
+#rule-icon { font-size: .9rem; flex-shrink: 0; margin-top: 1px; }
+#rule-text { flex: 1; }
+
+/* ── Ереже button ── */
+#btn-rules {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(124,58,237,.35), inset 0 1px 0 rgba(255,255,255,.18);
+}
+#btn-rules:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(124,58,237,.5); }
+
+/* ── RULES MODAL ── */
+#rules-modal {
+  display: none;
+  position: fixed; inset: 0; z-index: 600;
+  background: rgba(28,17,8,.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  align-items: center; justify-content: center;
+  padding: 16px;
+}
+#rules-modal.open { display: flex; }
+
+#rules-content {
+  position: relative;
+  background: #fdfaf4;
+  border-radius: 20px;
+  width: min(640px, 96vw);
+  max-height: 88vh;
+  overflow: hidden;
+  box-shadow: 0 16px 60px rgba(0,0,0,.4);
+  border: 2px solid rgba(200,140,50,.22);
+  display: flex; flex-direction: column;
+}
+
+.rules-corner {
+  position: absolute;
+  width: 54px; height: 54px;
+  object-fit: contain;
+  opacity: .15;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.15));
+}
+.rules-corner.tl { top: 8px;  left: 8px;  transform: rotate(-20deg); }
+.rules-corner.tr { top: 8px;  right: 8px; transform: rotate(20deg); }
+.rules-corner.bl { bottom: 52px; left: 8px;  transform: rotate(15deg); }
+.rules-corner.br { bottom: 52px; right: 8px; transform: rotate(-15deg); }
+
+#rules-body {
+  overflow-y: auto;
+  padding: 26px 24px 10px;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+#rules-body h2 {
+  font-size: 1.1rem; font-weight: 900; color: var(--terra);
+  margin-bottom: 10px; text-align: center;
+  border-bottom: 2px solid rgba(217,119,6,.2); padding-bottom: 8px;
+}
+#rules-body h3 {
+  font-size: .78rem; font-weight: 700; color: var(--amber);
+  text-transform: uppercase; letter-spacing: .1em;
+  margin: 14px 0 6px;
+}
+.rules-intro {
+  font-size: .8rem; color: var(--text-2); line-height: 1.65;
+  margin-bottom: 8px;
+}
+#rules-body p { font-size: .8rem; color: var(--text); line-height: 1.65; }
+
+.rule-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  background: rgba(217,119,6,.055);
+  border-radius: 10px;
+  border-left: 3px solid var(--amber-lt);
+}
+.rule-num {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--amber), var(--terra));
+  color: #fff;
+  font-size: .68rem; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 2px;
+}
+.rule-item div { font-size: .78rem; color: var(--text); line-height: 1.6; }
+.rule-item strong { color: var(--terra); }
+
+#rules-close {
+  font-family: 'Roboto', sans-serif;
+  font-size: .88rem; font-weight: 700; letter-spacing: .06em;
+  padding: 11px 36px; border: none;
+  border-radius: var(--r-pill);
+  background: linear-gradient(135deg, var(--amber), var(--terra));
+  color: #fff;
+  box-shadow: 0 3px 14px rgba(217,119,6,.35);
+  cursor: pointer; margin: 10px auto 14px;
+  display: block; transition: transform .12s, box-shadow .12s;
+  position: relative; z-index: 1;
+}
+#rules-close:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(217,119,6,.5); }
+#rules-close:active { transform: scale(.95); }
+
+/* ── Legacy styles overridden by sidebar layout ── */
+
+/* ── Message ── */
+#msg {
+  font-size: clamp(.85rem, 3vw, 1rem);
+  font-weight: 700; min-height: 22px; text-align: center;
+  color: var(--amber); letter-spacing: .02em; margin-bottom: 5px;
+  transition: color .18s;
+}
+#msg.green  { color: var(--green); }
+#msg.red    { color: var(--red); }
+#msg.purple { color: var(--purple); }
+#msg.pulse  { animation: msg-pop .3s cubic-bezier(.34,1.56,.64,1); }
+@keyframes msg-pop {
+  0%   { transform: scale(.88); opacity: .5; }
+  100% { transform: scale(1);   opacity: 1;  }
+}
+
+/* ── Countdown bar ── */
+#bar-wrap {
+  width: min(420px, 90vw); height: 7px;
+  background: #ddd6cc; border-radius: 99px; overflow: hidden;
+  margin-bottom: 7px; opacity: 0; transition: opacity .2s;
+}
+#bar-fill { height: 100%; width: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--teal), var(--amber-lt)); }
+
+/* ── Sub-instruction ── */
+#sub-msg {
+  font-size: .72rem; font-weight: 500; color: var(--text-2);
+  min-height: 18px; text-align: center; margin-bottom: 5px;
+  font-style: italic;
+}
+
+/* ── Sidebar layout handles play-zone, game-area, throw-area above ── */
+
+/* ── АТАЛЫҚ (thrown asyk) ── */
+#atalik {
+  position: absolute;
+  width: 96px; height: 96px;
+  display: none; pointer-events: none; z-index: 10;
+}
+#atalik img {
+  width: 100%; height: 100%; object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,.4));
+}
+
+/* Catch flash when аталық is catchable */
+#atalik.catchable {
+  pointer-events: auto;
+  cursor: pointer;
+  animation: catch-pulse .4s ease-in-out infinite;
+}
+@keyframes catch-pulse {
+  0%,100% { filter: drop-shadow(0 0 6px rgba(13,148,136,.7)); }
+  50%     { filter: drop-shadow(0 0 18px rgba(13,148,136,1)); }
+}
+
+/* ══════════════════════════════════════
+   GROUND ASYKS
+══════════════════════════════════════ */
+.asyk {
+  position: absolute;
+  width: 88px; height: 88px;
+  cursor: default; user-select: none; z-index: 2;
+}
+.asyk img {
+  width: 100%; height: 100%; object-fit: contain;
+  filter: drop-shadow(0 3px 8px rgba(0,0,0,.30));
+  transition: filter .15s, transform .15s;
+  pointer-events: none; display: block;
+}
+
+/* Highlight for square arrangement (stage 7) */
+.asyk.sq-pos img { filter: drop-shadow(0 3px 14px rgba(124,58,237,.7)) brightness(1.08); }
+
+.asyk.clickable { cursor: pointer; }
+.asyk.clickable img { animation: img-glow 1s ease-in-out infinite; }
+.asyk.clickable:hover img {
+  filter: drop-shadow(0 5px 16px rgba(255,185,30,.8)) brightness(1.14);
+  transform: scale(1.14);
+  animation: none;
+}
+@keyframes img-glow {
+  0%,100% { filter: drop-shadow(0 3px 8px rgba(0,0,0,.30)); }
+  50%     { filter: drop-shadow(0 3px 18px rgba(255,180,30,.65)); }
+}
+
+.asyk.picked {
+  cursor: default; pointer-events: none;
+  transform: translateY(-12px) scale(1.12) !important;
+  z-index: 5;
+}
+.asyk.picked img {
+  filter: drop-shadow(0 5px 18px rgba(22,163,74,.8)) brightness(1.1) saturate(1.3);
+  animation: none;
+}
+
+.asyk.wrong {
+  cursor: default; pointer-events: none;
+  animation: asyk-shake .42s ease;
+}
+.asyk.wrong img {
+  filter: drop-shadow(0 4px 16px rgba(220,38,38,.75)) brightness(.88) hue-rotate(-15deg) saturate(1.4);
+  animation: none;
+}
+@keyframes asyk-shake {
+  0%,100% { transform: translateX(0); }
+  22%     { transform: translateX(-11px); }
+  55%     { transform: translateX(11px); }
+  80%     { transform: translateX(-6px); }
+}
+
+/* ── Jalak tap targets ── */
+.tap-dot {
+  position: absolute;
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: rgba(124,58,237,.15);
+  border: 2.5px dashed var(--purple);
+  cursor: pointer; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; color: var(--purple);
+  animation: tap-pulse 1s ease-in-out infinite;
+}
+@keyframes tap-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(124,58,237,.3); }
+  50%     { box-shadow: 0 0 0 10px rgba(124,58,237,0); }
+}
+.tap-dot.tapped {
+  background: rgba(22,163,74,.2); border-color: var(--green);
+  color: var(--green); animation: none; pointer-events: none;
+}
+
+/* ══════════════════════════════════════
+   BUTTONS (sidebar style)
+══════════════════════════════════════ */
+.btn-row { display: none; } /* legacy row hidden */
+button {
+  font-family: 'Roboto', sans-serif;
+  font-size: .92rem;
+  font-weight: 700; letter-spacing: .06em;
+  padding: 12px 16px; border: none;
+  border-radius: var(--r-pill);
+  cursor: pointer; transition: transform .12s, box-shadow .12s;
+  width: 100%;
+}
+button:active:not(:disabled) { transform: scale(.95); }
+button:disabled { opacity: .45; cursor: default; }
+
+#btn-throw {
+  background: linear-gradient(135deg, var(--amber), var(--terra));
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(217,119,6,.38), inset 0 1px 0 rgba(255,255,255,.18);
+}
+#btn-throw:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(217,119,6,.5); }
+
+#btn-catch {
+  background: linear-gradient(135deg, var(--teal), #0a7a70);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(13,148,136,.38);
+  display: none;
+}
+#btn-catch:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(13,148,136,.5); }
+
+#btn-rules {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(124,58,237,.35), inset 0 1px 0 rgba(255,255,255,.18);
+}
+#btn-rules:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(124,58,237,.5); }
+
+/* ══════════════════════════════════════
+   OVERLAY
+══════════════════════════════════════ */
+#overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(244,240,235,.9);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  z-index: 500; flex-direction: column; align-items: center;
+  justify-content: center; gap: 12px; text-align: center; padding: 24px;
+}
+#overlay.show { display: flex; }
+.ov-emoji { font-size: 3rem; line-height: 1; animation: pop-in .45s cubic-bezier(.34,1.56,.64,1) both; }
+#ov-title {
+  font-size: clamp(1.9rem, 7vw, 2.8rem); font-weight: 900;
+  animation: pop-in .45s .06s cubic-bezier(.34,1.56,.64,1) both;
+}
+#ov-title.win  { color: var(--teal); }
+#ov-title.lose { color: var(--terra); }
+#ov-sub  { font-size: .9rem; font-weight: 500; color: var(--text-2); animation: pop-in .45s .10s cubic-bezier(.34,1.56,.64,1) both; }
+#ov-btn  {
+  font-family: 'Roboto', sans-serif; font-size: .9rem; font-weight: 700;
+  letter-spacing: .07em; padding: 12px 44px; border: none;
+  border-radius: var(--r-pill);
+  background: linear-gradient(135deg, var(--amber), var(--terra));
+  color: #fff; box-shadow: 0 4px 18px rgba(217,119,6,.38);
+  cursor: pointer; transition: transform .12s, box-shadow .12s;
+  animation: pop-in .45s .14s cubic-bezier(.34,1.56,.64,1) both; margin-top: 4px;
+}
+#ov-btn:hover  { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(217,119,6,.5); }
+#ov-btn:active { transform: scale(.95); }
+@keyframes pop-in {
+  0%   { transform: scale(0) rotate(-10deg); opacity: 0; }
+  70%  { transform: scale(1.1) rotate(2deg); }
+  100% { transform: scale(1)   rotate(0deg); opacity: 1; }
+}
+
+@media (max-width: 600px) {
+  body { flex-direction: column; overflow-y: auto; height: auto; }
+  #sidebar {
+    width: 100%; height: auto; flex-direction: row;
+    flex-wrap: wrap; padding: 8px 10px; gap: 6px;
+    border-right: none; border-bottom: 1.5px solid rgba(200,140,50,.18);
+    box-shadow: 0 3px 12px rgba(0,0,0,.08);
+    overflow-y: visible;
+  }
+  #main-content { height: auto; min-height: 60vh; }
+  .asyk { width: 60px; height: 60px; }
+  #atalik { width: 66px; height: 66px; }
+  button { padding: 9px 14px; }
+  .sb-btn-group { flex-direction: row; flex-wrap: wrap; }
+  .stage-dots { grid-template-columns: repeat(7, 1fr); }
+}
+
+/* ── Stage 8 swap selected outline ── */
+.asyk.swap-selected {
+  outline: 3px solid #7c3aed;
+  outline-offset: 3px;
+}
+
+/* ── Stage 11 karsu sequence number ── */
+.karsu-num {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 900; color: #fff;
+  text-shadow: 0 1px 6px rgba(0,0,0,.8);
+  pointer-events: none;
+}
+
+/* ── Stage 12 nabi nudge indicator ── */
+.nabi-count {
+  position: absolute; bottom: 6px; right: 8px;
+  font-size: .6rem; font-weight: 700;
+  color: var(--purple); opacity: .8;
+  pointer-events: none;
+}
+
+/* ── Stage 13 score highlighted asyks ── */
+.asyk.score-caught img {
+  filter: drop-shadow(0 0 14px gold) brightness(1.35);
+}
+.score-display {
+  position: absolute; top: 12px; left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff; font-size: 1.2rem; font-weight: 900;
+  padding: 6px 22px; border-radius: 999px;
+  box-shadow: 0 3px 12px rgba(217,119,6,.5);
+  pointer-events: none; z-index: 20;
+  animation: pop-in .35s cubic-bezier(.34,1.56,.64,1) both;
+}
+</style>
+</head>
+<body>
+
+<!-- ════ SIDEBAR ════ -->
+<div id="sidebar">
+
+  <!-- Stage badge -->
+  <div id="stage-badge">1-деңгей: Бірлік</div>
+
+  <!-- HUD chips -->
+  <div class="hud">
+    <div class="chip"><span class="chip-lbl">Деңгей</span><span class="chip-val" id="hud-stage">1/13</span></div>
+    <div class="chip"><span class="chip-lbl">Лақтыру</span><span class="chip-val" id="hud-throw">-</span></div>
+    <div class="chip"><span class="chip-lbl">Жиналды</span><span class="chip-val" id="hud-picked">0</span></div>
+    <div class="chip"><span class="chip-lbl">Қалды</span><span class="chip-val" id="hud-left">4</span></div>
+    <div class="chip"><span class="chip-lbl">Ұпай</span><span class="chip-val" id="hud-score">-</span></div>
+  </div>
+
+  <!-- Level select circles -->
+  <span class="sb-section-label">Деңгей таңдау</span>
+  <div class="stage-dots">
+    <div class="dot active" data-idx="0"  data-name="1: Бірлік"         onclick="selectStage(0)">1</div>
+    <div class="dot"        data-idx="1"  data-name="2: Екілік"         onclick="selectStage(1)">2</div>
+    <div class="dot"        data-idx="2"  data-name="3: Үштік"          onclick="selectStage(2)">3</div>
+    <div class="dot"        data-idx="3"  data-name="4: Төрттік"        onclick="selectStage(3)">4</div>
+    <div class="dot"        data-idx="4"  data-name="5: Жалақ"          onclick="selectStage(4)">5</div>
+    <div class="dot"        data-idx="5"  data-name="6: Алақан"         onclick="selectStage(5)">6</div>
+    <div class="dot"        data-idx="6"  data-name="7: Төртбұрыш"      onclick="selectStage(6)">7</div>
+    <div class="dot"        data-idx="7"  data-name="8: Асық алмастыру" onclick="selectStage(7)">8</div>
+    <div class="dot"        data-idx="8"  data-name="9: Үндемес"        onclick="selectStage(8)">9</div>
+    <div class="dot"        data-idx="9"  data-name="10: Сарт-сұрт"     onclick="selectStage(9)">10</div>
+    <div class="dot"        data-idx="10" data-name="11: Қаршу"         onclick="selectStage(10)">11</div>
+    <div class="dot"        data-idx="11" data-name="12: Нәби"          onclick="selectStage(11)">12</div>
+    <div class="dot"        data-idx="12" data-name="13: Ұпай жинау"    onclick="selectStage(12)">13</div>
+  </div>
+
+  <!-- Time slider -->
+  <div class="t-ctrl">
+    <div class="t-ctrl-row">
+      <span class="t-lbl">⏱ Уақыт</span>
+      <span id="t-val">0.8 сек</span>
+    </div>
+    <input type="range" id="t-slider" min="0.5" max="5" step="0.1" value="0.8"/>
+  </div>
+
+  <!-- Current rule -->
+  <div id="rule-panel">
+    <span id="rule-icon">📖</span>
+    <span id="rule-text">1. Бірлік: аталықты лақтырып, 1 асықты жинаңыз.</span>
+  </div>
+
+  <!-- Sidebar action buttons -->
+  <div class="sb-btn-group">
+    <button id="btn-throw">🔄 Лақтыру</button>
+    <button id="btn-catch">✋ Ұстау</button>
+    <button id="btn-rules" onclick="openRules()">📋 Ереже</button>
+  </div>
+
+</div>
+
+<!-- ════ MAIN CONTENT ════ -->
+<div id="main-content">
+
+  <!-- Title stays in main content area -->
+  <div class="main-header">
+    <h1>Бес асық ойынындағы қимыл-қозғалысты нейрожелі арқылы тану</h1>
+    <span class="sub-title">Қожахметов Болатбек Баймұратұлы</span>
+  </div>
+
+  <!-- Message + bar -->
+  <div class="msg-bar-row">
+    <div id="msg">«Лақтыру» батырмасын басыңыз!</div>
+    <div id="sub-msg"></div>
+    <div id="bar-wrap"><div id="bar-fill"></div></div>
+  </div>
+
+  <!-- Play zone: game area + throw area -->
+  <div class="play-zone">
+  <div id="game-area">
+    <!-- Action buttons pinned to bottom center of game area -->
+    <div id="game-action-bar">
+      <button id="game-btn-throw">🔄 Лақтыру</button>
+      <button id="game-btn-catch">✋ Ұстау</button>
+    </div>
+    <!-- ground asyks injected by JS -->
+  </div>
+    <div id="throw-area">
+      <div id="atalik"><img id="atalik-img" src="alshy.png" alt="аталық"/></div>
+      <div id="throw-label">↑ аталық</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════ RULES MODAL ════ -->
+<div id="rules-modal">
+  <div id="rules-content">
+    <!-- decorative corner images -->
+    <img class="rules-corner tl" src="alshy.png" alt=""/>
+    <img class="rules-corner tr" src="buk.png"   alt=""/>
+    <img class="rules-corner bl" src="shik.png"  alt=""/>
+    <img class="rules-corner br" src="tauka.png" alt=""/>
+
+    <div id="rules-body">
+      <h2>Бес асық ойынының ережелері</h2>
+      <p class="rules-intro">Бес асық — қазақ халқының ежелден келе жатқан, ептілік пен зейінділікті талап ететін ең танымал ойындарының бірі. Ойынның негізгі ережелері мен кезеңдерін төмендегідей жүйелеп беруге болады:</p>
+
+      <h3>Ойынның негізгі мақсаты</h3>
+      <p>Бес асықты бір қолмен қағып алу арқылы барлық кезеңдерден қатесіз өту.</p>
+
+      <h3>Ойын кезеңдері</h3>
+
+      <div class="rule-item">
+        <span class="rule-num">1</span>
+        <div><strong>Бірлік (Бірінші):</strong> Асықтарды жерге шашады. Аталықты таңдап алып, жоғары лақтырады да, ол жерге түскенше жердегі асықтың біреуін алып, лақтырған асықты қағып алады. Осылайша төртеуін де бір-бірлеп жинайды.</div>
+      </div>
+      <div class="rule-item">
+        <span class="rule-num">2</span>
+        <div><strong>Екілік (Екінші):</strong> Аталықты лақтырып, жердегі асықтарды екі-екіден жинап алу қажет.</div>
+      </div>
+      <div class="rule-item">
+        <span class="rule-num">3</span>
+        <div><strong>Үштік (Үшінші):</strong> Аталықты лақтырып, жердегі үш асықты бірден, сосын қалған біреуін жеке жинап алады.</div>
+      </div>
+      <div class="rule-item">
+        <span class="rule-num">4</span>
+        <div><strong>Төрттік (Төртінші):</strong> Аталық жоғарыда болғанда, жердегі төрт асықты бірден сипап жинап, жоғарыдағы аталықты қағып алу керек.</div>
+      </div>
+      <div class="rule-item">
+        <span class="rule-num">5</span>
+        <div><strong>Жалақ (Бесінші):</strong> Аталық жоғарыда болғанда, қалған төрт асықты алақанда ұстап, бір саусақпен жерді үш рет жалау керек.</div>
+      </div>
+      <div class="rule-item">
+        <span class="rule-num">6</span>
+        <div><strong>Алақан (Алтылық):</strong> Аталықты жоғары лақтырып, жердегі төрт асықты алақанға біртіндеп қолды қозғалтпай жинау керек.</div>
+      </div>
+      <div class="rule-item">
+        <span class="rule-num">7</span>
+        <div><strong>Төртбұрыш (Жетілік):</strong> Төрт асықты жерге төрт бұрыш етіп орналастырып, аталық жоғарыда болғанда, оларды бір уысқа жинап үлгеру керек.</div>
+      </div>
+      <div class="rule-item">
+        <span class="rule-num">8</span>
+        <div><strong>Асық алмастыру (Сегіздік):</strong> Асықтарды бір-біріне тигізбей орындарын ауыстырып, соңында жинау керек.</div>
+      </div>
+      <div class="rule-item">
+        <span class="rule-num">9</span>
+        <div><strong>Үндемес (Тоғыздық):</strong> Асықтар бір-біріне соғылып дыбыс шығармауы тиіс.</div>
+      </div>
+      <div class="rule-item">
+        <span class="rule-num">10</span>
+        <div><strong>Сарт-сұрт (Ондық):</strong> Асықтарды әдейі дыбыс шығарып жинау керек.</div>
+      </div>
+      <div class="rule-item">
+        <span class="rule-num">11</span>
+        <div><strong>Қаршу (Он бір):</strong> Асықтарды біртіндеп өте жылдам қаршып іліп алу керек.</div>
+      </div>
+      <div class="rule-item">
+        <span class="rule-num">12</span>
+        <div><strong>Нәби (Он екі):</strong> Асықтарды нұқып немесе жылжытып, келесі қадамға ыңғайлау керек.</div>
+      </div>
+      <div class="rule-item">
+        <span class="rule-num">13</span>
+        <div><strong>Ұпай жинау (Он үш):</strong> Асықтарды жоғары лақтырып, қолдың сыртымен қағып алып, ұпай жинау.</div>
+      </div>
+    </div>
+
+    <button id="rules-close" onclick="closeRules()">✕ Жабу</button>
+  </div>
+</div>
+
+<!-- ════ OVERLAY ════ -->
+<div id="overlay">
+  <div class="ov-emoji" id="ov-emoji"></div>
+  <div id="ov-title"></div>
+  <div id="ov-sub"></div>
+  <button id="ov-btn" onclick="handleOverlayBtn()"></button>
+</div>
+
+<script>
+/*
+  БЕС АСЫҚ — Дәстүрлі 7 кезеңлі ойын
+  ═══════════════════════════════════════════════════════════
+  Кезең  Аты          Ереже
+  ─────  ──────────   ──────────────────────────────────────
+  1      Бірлік       Әр лақтыруда 1 асық жинайды (×4)
+  2      Екілік       Әр лақтыруда 2 асық жинайды (×2)
+  3      Үштік        1-лақтыру: 3, 2-лақтыру: 1
+  4      Төрттік      Бір лақтыруда барлық 4 асық
+  5      Жалақ        4 асық + 3 рет жер тебу
+  6      Алақан       4 асықты дәйекті жинау (шектеулі уақыт)
+  7      Төртбұрыш    Шаршы формасындағы 4 асықты бір уақытта жинау
+  ═══════════════════════════════════════════════════════════
+*/
+
+/* ─── ТҰРАҚТЫЛАР ─── */
+const IMAGES     = ['alshy.png','buk.png','shik.png','tauka.png'];
+const TOTAL      = 4;    // жердегі асық саны (аталық бөлек)
+const SCATTER_MS = 320;  // шашырау анимациясы, мс
+const TICK_MS    = 40;   // таймер тик, мс
+const SPIN_MS    = 70;   // аталық сурет ауысу, мс
+const AW = 88, AH = 88;  // жердегі асық өлшемі (CSS-пен сәйкес)
+const TW = 96;           // аталық өлшемі (CSS-пен сәйкес)
+const PAD = 12;          // алаң шеті
+const DEAD_R = 90;       // орталық өлі аймақ
+
+/* Stage definitions */
+const STAGES = [
+  { id:1,  name:'Бірлік',         pickPerThrow:1, throws:4, special:null },
+  { id:2,  name:'Екілік',         pickPerThrow:2, throws:2, special:null },
+  { id:3,  name:'Үштік',          pickPerThrow:-1,throws:-1,special:'ushtin' },
+  { id:4,  name:'Төрттік',        pickPerThrow:4, throws:1, special:null },
+  { id:5,  name:'Жалақ',          pickPerThrow:4, throws:1, special:'jalak' },
+  { id:6,  name:'Алақан',         pickPerThrow:1, throws:4, special:'alakan' },
+  { id:7,  name:'Төртбұрыш',      pickPerThrow:4, throws:1, special:'square' },
+  { id:8,  name:'Асық алмастыру', pickPerThrow:4, throws:1, special:'swap' },
+  { id:9,  name:'Үндемес',        pickPerThrow:4, throws:1, special:'silent' },
+  { id:10, name:'Сарт-сұрт',      pickPerThrow:4, throws:1, special:'crash' },
+  { id:11, name:'Қаршу',          pickPerThrow:1, throws:4, special:'karsu' },
+  { id:12, name:'Нәби',           pickPerThrow:0, throws:1, special:'nabi' },
+  { id:13, name:'Ұпай жинау',     pickPerThrow:0, throws:1, special:'score' },
+];
+
+/* ─── КҮЙ ─── */
+let g = freshState();
+
+function freshState() {
+  return {
+    stageIdx:    0,
+    phase:       'idle',
+    pickedTotal: 0,
+    throwNum:    0,
+    pickedThrow: 0,
+    jalakTaps:   0,
+    atalikLanded:false,
+    tickId: null, mainId: null, spinId: null, rafId: null,
+    elapsed: 0,
+    ushtinPhase: 1,
+    // Stage 8 swap
+    swapMoved:   false,
+    // Stage 9 silent — collision detection
+    silentOk:    true,
+    // Stage 10 crash — collision required
+    crashHit:    false,
+    // Stage 11 karsu — sequential strict timer per pick
+    karsuSeqIdx: 0,
+    karsuTickId: null,
+    // Stage 12 nabi — nudge count
+    nabiNudges:  0,
+    nabiGoal:    3,
+    // Stage 13 score
+    scoreVal:    0,
+    scoreCaught: false,
+  };
+}
+
+/* ─── DOM ─── */
+const $game      = document.getElementById('game-area');
+const $throwArea = document.getElementById('throw-area');
+const $atalik    = document.getElementById('atalik');
+const $atalikImg = document.getElementById('atalik-img');
+const $msg       = document.getElementById('msg');
+const $subMsg    = document.getElementById('sub-msg');
+const $barWrap   = document.getElementById('bar-wrap');
+const $barFill   = document.getElementById('bar-fill');
+const $btnThrow  = document.getElementById('btn-throw');
+const $btnCatch  = document.getElementById('btn-catch');
+const $overlay   = document.getElementById('overlay');
+const $ovEmoji   = document.getElementById('ov-emoji');
+const $ovTitle   = document.getElementById('ov-title');
+const $ovSub     = document.getElementById('ov-sub');
+const $ovBtn     = document.getElementById('ov-btn');
+const $hudStage  = document.getElementById('hud-stage');
+const $hudThrow  = document.getElementById('hud-throw');
+const $hudPicked = document.getElementById('hud-picked');
+const $hudLeft   = document.getElementById('hud-left');
+const $badge     = document.getElementById('stage-badge');
+const $dots      = document.querySelectorAll('.dot');
+const $slider    = document.getElementById('t-slider');
+const $tVal      = document.getElementById('t-val');
+
+/* ─── Helpers ─── */
+function randImg()     { return IMAGES[Math.floor(Math.random() * IMAGES.length)]; }
+function timeLimitMs() { return Math.round(parseFloat($slider.value) * 1000); }
+function stage()       { return STAGES[g.stageIdx]; }
+
+$slider.addEventListener('input', () => {
+  $tVal.textContent = parseFloat($slider.value).toFixed(1) + ' сек';
+});
+
+/* ══════════════════════════════════════
+   HUD + UI
+══════════════════════════════════════ */
+function updateHUD() {
+  const s = stage();
+  $hudStage.textContent  = (g.stageIdx+1) + '/13';
+  $hudThrow.textContent  = g.throwNum > 0 ? g.throwNum : '-';
+  $hudPicked.textContent = g.pickedTotal;
+  $hudLeft.textContent   = Math.max(0, TOTAL - g.pickedTotal);
+  $badge.textContent     = (g.stageIdx+1) + '-деңгей: ' + s.name;
+  const sc = document.getElementById('hud-score');
+  if (sc) sc.textContent = g.scoreVal > 0 ? g.scoreVal + ' ұп' : '-';
+  // Update rule panel too
+  const $rt = document.getElementById('rule-text');
+  if ($rt) $rt.textContent = (typeof LEVEL_RULES !== 'undefined') ? (LEVEL_RULES[g.stageIdx] || '') : '';
+}
+function updateDots() {
+  $dots.forEach((d,i) => {
+    d.classList.remove('done','active');
+    if      (i < g.stageIdx)  d.classList.add('done');
+    else if (i === g.stageIdx) d.classList.add('active');
+  });
+}
+function setMsg(text, cls='') {
+  $msg.textContent = text; $msg.className = cls;
+  void $msg.offsetWidth; $msg.classList.add('pulse');
+  $msg.addEventListener('animationend', () => $msg.classList.remove('pulse'), {once:true});
+}
+function setSubMsg(text) { $subMsg.textContent = text; }
+
+/* ══════════════════════════════════════
+   CLUSTER — 4 асықты ортаға орналастыру
+══════════════════════════════════════ */
+function buildCluster(positions) {
+  document.querySelectorAll('.asyk,.tap-dot').forEach(e => e.remove());
+
+  const fw = $game.clientWidth, fh = $game.clientHeight;
+  const cx = fw/2 - AW/2, cy = fh/2 - AH/2;
+  const R  = 32;
+
+  const pts = positions || Array.from({length:TOTAL},(_,i) => {
+    const angle = (i/TOTAL)*Math.PI*2 - Math.PI/2;
+    return { x: cx + Math.cos(angle)*R, y: cy + Math.sin(angle)*R };
+  });
+
+  for (let i = 0; i < TOTAL; i++) {
+    const el = makeAsyk(i);
+    el.style.left = pts[i].x + 'px';
+    el.style.top  = pts[i].y + 'px';
+    el.style.transition = 'none';
+    $game.appendChild(el);
+  }
+}
+
+function makeAsyk(idx) {
+  const el = document.createElement('div');
+  el.className = 'asyk';
+  el.dataset.idx = idx;
+  const img = document.createElement('img');
+  img.src = randImg(); img.alt = 'асық';
+  // Кездейсоқ айналым — нақты лақтырылған асық сияқты
+  const deg = Math.floor(Math.random() * 360);
+  img.style.transform = 'rotate(' + deg + 'deg)';
+  el.appendChild(img);
+  el.addEventListener('click', () => onAsykClick(idx, el));
+  return el;
+}
+
+/* ══════════════════════════════════════
+   SQUARE ARRANGEMENT (Stage 7)
+══════════════════════════════════════ */
+function buildSquare() {
+  document.querySelectorAll('.asyk,.tap-dot').forEach(e => e.remove());
+  const fw = $game.clientWidth, fh = $game.clientHeight;
+  const cx = fw/2, cy = fh/2;
+  const offset = 55;
+  const corners = [
+    {x: cx - offset - AW/2, y: cy - offset - AH/2},
+    {x: cx + offset - AW/2, y: cy - offset - AH/2},
+    {x: cx - offset - AW/2, y: cy + offset - AH/2},
+    {x: cx + offset - AW/2, y: cy + offset - AH/2},
+  ];
+  for (let i=0; i<TOTAL; i++) {
+    const el = makeAsyk(i);
+    el.classList.add('sq-pos');
+    el.style.left = corners[i].x + 'px';
+    el.style.top  = corners[i].y + 'px';
+    el.style.transition = 'none';
+    $game.appendChild(el);
+  }
+}
+
+/* ══════════════════════════════════════
+   SCATTER
+══════════════════════════════════════ */
+function scatter() {
+  const fw = $game.clientWidth, fh = $game.clientHeight;
+  const els = [...document.querySelectorAll('.asyk')];
+  const pts = randomPositions(els.length, fw, fh);
+
+  els.forEach((el, i) => {
+    const img = el.querySelector('img');
+    img.src = randImg();
+    // Кездейсоқ жаңа айналым
+    img.style.transform = 'rotate(' + Math.floor(Math.random() * 360) + 'deg)';
+    el.classList.remove('sq-pos');
+    el.style.transition =
+      `left ${SCATTER_MS}ms cubic-bezier(.18,.82,.22,1.08),
+       top  ${SCATTER_MS}ms cubic-bezier(.18,.82,.22,1.08)`;
+    el.style.transitionDelay = (i * 16) + 'ms';
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      el.style.left = pts[i].x + 'px';
+      el.style.top  = pts[i].y + 'px';
+    }));
+  });
+}
+
+function randomPositions(n, fw, fh) {
+  const gap = AW+8, minX=PAD, maxX=fw-AW-PAD, minY=PAD, maxY=fh-AH-PAD;
+  const cx = fw/2, cy = fh/2;
+  const res=[]; let tries=0;
+  while (res.length<n && tries<3000) {
+    tries++;
+    const x=minX+Math.random()*(maxX-minX), y=minY+Math.random()*(maxY-minY);
+    const mx=x+AW/2, my=y+AH/2;
+    if (Math.hypot(mx-cx,my-cy)<DEAD_R) continue;
+    let ok=true;
+    for (const p of res) if (Math.hypot(mx-(p.x+AW/2),my-(p.y+AH/2))<gap){ok=false;break;}
+    if (ok) res.push({x,y});
+  }
+  return res;
+}
+
+/* ══════════════════════════════════════
+   АТАЛЫҚ АНИМАЦИЯСЫ — throw-area ішінде
+   • Бір рет жоғары → төмен (цикл жоқ)
+   • Жоғары: ease-out (баяу аяқтайды), төмен: ease-in (жылдамдайды)
+   • Әр кадрда кездейсоқ 3D айналым — нақты лақтырылған сияқты
+   • Жерге түскенде айналым тоқтайды
+══════════════════════════════════════ */
+function animateAtalik(durationMs) {
+  const th = $throwArea.clientHeight, tw = $throwArea.clientWidth;
+  const landX = tw/2 - TW/2;
+  const landY = th - TW - 14;
+  const peakY  = 10;
+
+  $atalik.style.left      = landX + 'px';
+  $atalik.style.top       = landY + 'px';
+  $atalik.style.display   = 'block';
+  $atalik.style.transform = '';
+  $atalikImg.src = randImg();
+
+  /* ── Rotation state: random axis speeds set once per throw ── */
+  const rxSpeed = (Math.random() * 3 + 2) * (Math.random() < .5 ? 1 : -1); // deg/ms X
+  const rySpeed = (Math.random() * 4 + 2) * (Math.random() < .5 ? 1 : -1); // deg/ms Y
+  const rzSpeed = (Math.random() * 5 + 3) * (Math.random() < .5 ? 1 : -1); // deg/ms Z
+  let   rotX = Math.random() * 360;
+  let   rotY = Math.random() * 360;
+  let   rotZ = Math.random() * 360;
+  let   lastTs = null;
+
+  /* ── Image spin (cycle sides quickly while airborne) ── */
+  let spinIdx = 0;
+  g.spinId = setInterval(() => {
+    spinIdx = (spinIdx + 1) % IMAGES.length;
+    $atalikImg.src = IMAGES[spinIdx];
+  }, SPIN_MS);
+
+  /* ── Height easing:
+       Up phase (t: 0→0.5): ease-out (decelerates)  → use sin curve first half
+       Down phase (t: 0.5→1): ease-in (accelerates)  → use sin curve second half
+       Both from sin(t*π) which naturally gives ease-out-up + ease-in-down ── */
+  let startTime = null;
+
+  function step(ts) {
+    if (!startTime) { startTime = ts; lastTs = ts; }
+    const elapsed = ts - startTime;
+    const dt      = ts - lastTs;      // delta ms since last frame
+    lastTs = ts;
+
+    const t = Math.min(elapsed / durationMs, 1);
+
+    /* Vertical position */
+    const h  = Math.sin(t * Math.PI);  // 0→1→0, ease-out up, ease-in down
+    $atalik.style.top = (landY - h * (landY - peakY)) + 'px';
+
+    /* 3D rotation — accumulate per frame delta */
+    if (t < 1) {
+      rotX += rxSpeed * dt * 0.12;
+      rotY += rySpeed * dt * 0.12;
+      rotZ += rzSpeed * dt * 0.12;
+      $atalik.style.transform =
+        `perspective(300px) rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`;
+      g.rafId = requestAnimationFrame(step);
+    } else {
+      /* Landed — stop everything */
+      $atalik.style.top       = landY + 'px';
+      $atalik.style.transform = '';          /* reset transform on landing */
+      clearInterval(g.spinId); g.spinId = null;
+      g.rafId = null;
+      $atalikImg.src = randImg();            /* show final random face */
+      g.atalikLanded = true;
+      onAtalikLanded();
+    }
+  }
+
+  g.rafId = requestAnimationFrame(step);
+}
+
+/* Called when аталық finishes its arc */
+function onAtalikLanded() {
+  // If picks are done and we're waiting in catch phase, show button
+  if (g.phase === 'catch') {
+    activateCatch();
+  }
+}
+
+/* ══════════════════════════════════════
+   ТАЙМЕР
+══════════════════════════════════════ */
+function startTimer() {
+  const lim = timeLimitMs();
+  g.elapsed = 0;
+  $barWrap.style.opacity='1'; $barFill.style.transition='none';
+  $barFill.style.width='100%'; $barFill.style.background='linear-gradient(90deg,#0d9488,#d97706)';
+
+  g.tickId = setInterval(() => {
+    g.elapsed += TICK_MS;
+    const pct = Math.max(0, 100-(g.elapsed/lim)*100);
+    $barFill.style.width = pct+'%';
+    if      (pct<18) $barFill.style.background='linear-gradient(90deg,#dc2626,#b91c1c)';
+    else if (pct<48) $barFill.style.background='linear-gradient(90deg,#ea580c,#c2410c)';
+  }, TICK_MS);
+
+  g.mainId = setTimeout(() => {
+    if (g.phase==='active'||g.phase==='catch'||g.phase==='jalak') {
+      killTimers(); fail('Уақыт бітті!');
+    }
+  }, lim);
+}
+function killTimers() {
+  clearInterval(g.tickId); clearTimeout(g.mainId);
+  g.tickId=g.mainId=null;
+}
+function hideBar() { $barWrap.style.opacity='0'; $barFill.style.width='100%'; }
+function stopAtalik() {
+  if (g.rafId) { cancelAnimationFrame(g.rafId); g.rafId=null; }
+  if (g.spinId){ clearInterval(g.spinId); g.spinId=null; }
+  $atalik.onclick = null;
+  $atalik.style.pointerEvents = 'none';
+  $atalik.style.cursor = 'default';
+  $atalik.style.transform = '';  /* clear any mid-flight 3D rotation */
+  $atalik.classList.remove('catchable');
+  $atalik.style.display='none';
+}
+
+/* ══════════════════════════════════════
+   THROW BUTTON — both sidebar and game-area
+══════════════════════════════════════ */
+const $gameBtnThrow = document.getElementById('game-btn-throw');
+const $gameBtnCatch = document.getElementById('game-btn-catch');
+
+$btnThrow.addEventListener('click', doThrow);
+if ($gameBtnThrow) $gameBtnThrow.addEventListener('click', doThrow);
+
+/* ── No MutationObserver needed — buttons synced directly in each function ── */
+
+function doThrow() {
+  if (g.phase!=='idle') return;
+
+  const s = stage();
+  g.throwNum++;
+  g.pickedThrow = 0;
+  g.atalikLanded = false;
+  g.phase = 'scatter';
+
+  $btnThrow.disabled = true;
+  if ($gameBtnThrow) $gameBtnThrow.disabled = true;
+  $btnCatch.style.display = 'none';
+  if ($gameBtnCatch) $gameBtnCatch.style.display = 'none';
+  $slider.disabled = true;
+  updateHUD();
+
+  // Stage 7: NO scatter — asyks stay in square formation
+  if (s.special==='square') {
+    buildSquare();
+    afterScatter();
+  }
+  // Stage 12 nabi & 13 score — rebuild cluster, no scatter
+  else if (s.special==='nabi' || s.special==='score') {
+    buildCluster();
+    afterScatter();
+  }
+  else {
+    scatter();
+    afterScatter();
+  }
+
+  animateAtalik(timeLimitMs());
+  setMsg('Лақтырылды!');
+  setSubMsg(getStageHint());
+}
+
+function afterScatter() {
+  setTimeout(() => {
+    g.phase = 'active';
+    const s = stage();
+    const need = getNeedForThisThrow();
+
+    if (s.special==='jalak') {
+      document.querySelectorAll('.asyk').forEach(el => el.classList.add('clickable'));
+      setMsg('Тез таңда!');
+      setSubMsg('Барлық 4 асықты жинаңыз, содан соң жер тебіңіз!');
+    }
+    else if (s.special==='alakan') {
+      document.querySelectorAll('.asyk').forEach(el => el.classList.add('clickable'));
+      setMsg('Тез таңда!');
+      setSubMsg('Алақанды қозғамай дәйекті жинаңыз!');
+    }
+    else if (s.special==='square') {
+      document.querySelectorAll('.asyk').forEach(el => el.classList.add('clickable'));
+      setMsg('Тез таңда!');
+      setSubMsg('Шаршыдағы 4 асықты бірден жинаңыз!');
+    }
+    else if (s.special==='swap') {
+      startSwapStage();
+    }
+    else if (s.special==='silent') {
+      startSilentStage();
+    }
+    else if (s.special==='crash') {
+      startCrashStage();
+    }
+    else if (s.special==='karsu') {
+      startKarsuStage();
+    }
+    else if (s.special==='nabi') {
+      startNabiStage();
+    }
+    else if (s.special==='score') {
+      startScoreStage();
+    }
+    else {
+      document.querySelectorAll('.asyk').forEach(el => el.classList.add('clickable'));
+      setMsg('Тез таңда!');
+      setSubMsg('Қажетті асық санын жинаңыз: ' + need);
+    }
+    startTimer();
+  }, SCATTER_MS + 40);
+}
+
+function getNeedForThisThrow() {
+  const s = stage();
+  if (s.special==='ushtin') return g.ushtinPhase===1 ? 3 : 1;
+  return s.pickPerThrow;
+}
+
+function getStageHint() {
+  const s = stage();
+  switch(s.special) {
+    case 'ushtin':  return g.ushtinPhase===1 ? 'Бірінші: 3 асық жинаңыз' : 'Екінші: 1 асық жинаңыз';
+    case 'jalak':   return '4 асық + 3 рет жер тебу';
+    case 'alakan':  return 'Әр лақтыруда 1 асық, дәйекті';
+    case 'square':  return 'Шаршыдағы 4 асықты бірден';
+    case 'swap':    return 'Асықтарды жылжытыңыз (қабыспасын!), содан соң жинаңыз';
+    case 'silent':  return 'Асықтар бір-біріне тимей жинаңыз';
+    case 'crash':   return 'Жинағанда асықтарды соқтырыстырыңыз!';
+    case 'karsu':   return 'Асықтарды дәйекті жылдам жинаңыз';
+    case 'nabi':    return 'Асықтарды итеріп орын алмастырыңыз';
+    case 'score':   return 'Асықтарды лақтырып, барынша көп ұстаңыз!';
+    default: return s.pickPerThrow + ' асық жинаңыз (лақтыру ' + g.throwNum + ')';
+  }
+}
+
+/* ══════════════════════════════════════
+   ASYK CLICK
+══════════════════════════════════════ */
+function onAsykClick(idx, el) {
+  if (g.phase!=='active') return;
+  if (el.classList.contains('picked')||el.classList.contains('wrong')) return;
+
+  const s = stage();
+
+  // Stage 11 karsu — sequential picking handled separately
+  if (s.special==='karsu') { karsuOnPick(idx, el); return; }
+  // Stage 12 nabi — click handled by per-element listener, ignore here
+  if (s.special==='nabi') return;
+  // Stage 13 score — no picking, catch button only
+  if (s.special==='score') return;
+  // Stage 8 swap — handled by per-element listener
+  if (s.special==='swap') return;
+
+  const need = getNeedForThisThrow();
+  if (g.pickedThrow >= need) return;
+
+  g.pickedThrow++;
+  g.pickedTotal++;
+  el.classList.remove('clickable');
+  el.classList.add('picked');
+  updateHUD();
+
+  const left = need - g.pickedThrow;
+  if (left > 0) {
+    setMsg('Тағы ' + left + ' асық таңда!');
+    return;
+  }
+
+  if (s.special==='jalak') {
+    startJalak();
+  } else if (s.special==='crash') {
+    triggerCrashEffect(el);
+    g.crashHit = true;
+    activateCatch();
+  } else if (s.special==='silent') {
+    if (checkAsykCollision(el)) {
+      fail('Асықтар соқтығысты! Үндемес ережесі бұзылды!');
+      return;
+    }
+    if (g.pickedThrow >= need) activateCatch();
+  } else {
+    activateCatch();
+  }
+}
+
+/* ══════════════════════════════════════
+   CATCH MECHANIC
+══════════════════════════════════════ */
+function activateCatch() {
+  if (g.phase === 'done') return;
+  g.phase = 'catch';
+  setMsg('Қазір ұста!', 'green');
+  setSubMsg('«Ұстау» батырмасын басыңыз!');
+
+  // Show both Catch buttons (sidebar + game-area)
+  $btnCatch.style.display = 'inline-block';
+  $btnCatch.disabled = false;
+  if ($gameBtnCatch) {
+    $gameBtnCatch.style.display = 'inline-block';
+    $gameBtnCatch.disabled = false;
+  }
+
+  // Make аталық clickable too
+  $atalik.style.pointerEvents = 'auto';
+  $atalik.style.cursor = 'pointer';
+  $atalik.classList.add('catchable');
+  $atalik.onclick = doCatch;
+}
+
+$btnCatch.addEventListener('click', doCatch);
+if ($gameBtnCatch) $gameBtnCatch.addEventListener('click', doCatch);
+
+function doCatch() {
+  if (g.phase!=='catch') return;
+  killTimers();
+  $atalik.onclick = null;
+  $atalik.style.pointerEvents = 'none';
+  $atalik.style.cursor = 'default';
+  $atalik.classList.remove('catchable');
+  $btnCatch.style.display = 'none';
+  if ($gameBtnCatch) $gameBtnCatch.style.display = 'none';
+  hideBar();
+  setMsg('Дұрыс! Ұстады! 👍', 'green');
+  setSubMsg('');
+  checkThrowComplete();
+}
+
+/* ══════════════════════════════════════
+   JALAK — 3 рет жер тебу
+══════════════════════════════════════ */
+function startJalak() {
+  g.phase = 'jalak';
+  g.jalakTaps = 0;
+  setMsg('Жерді 3 рет тебіңіз!', 'purple');
+  setSubMsg('Нүктелерді басыңыз!');
+
+  // Remove existing asyks (already picked), show 3 tap dots
+  const fw=$game.clientWidth, fh=$game.clientHeight;
+  const positions = [
+    {x: fw*0.25-27, y: fh*0.65-27},
+    {x: fw*0.50-27, y: fh*0.65-27},
+    {x: fw*0.75-27, y: fh*0.65-27},
+  ];
+  document.querySelectorAll('.tap-dot').forEach(e=>e.remove());
+  positions.forEach((p,i) => {
+    const dot = document.createElement('div');
+    dot.className='tap-dot'; dot.dataset.tap=i;
+    dot.style.left=p.x+'px'; dot.style.top=p.y+'px';
+    dot.textContent='●';
+    dot.addEventListener('click', onTapDot);
+    $game.appendChild(dot);
+  });
+}
+
+function onTapDot(e) {
+  if (g.phase!=='jalak') return;
+  const dot = e.currentTarget;
+  if (dot.classList.contains('tapped')) return;
+  dot.classList.add('tapped');
+  g.jalakTaps++;
+  if (g.jalakTaps>=3) {
+    document.querySelectorAll('.tap-dot').forEach(el=>el.remove());
+    activateCatch();
+  } else {
+    setMsg('Тағы ' + (3-g.jalakTaps) + ' рет!', 'purple');
+  }
+}
+
+/* ══════════════════════════════════════
+   THROW COMPLETE CHECK
+══════════════════════════════════════ */
+function checkThrowComplete() {
+  stopAtalik();
+  document.querySelectorAll('.asyk').forEach(el=>el.classList.remove('clickable'));
+
+  const s = stage();
+
+  if (s.special==='ushtin') {
+    if (g.ushtinPhase===1 && g.pickedTotal===3) { g.ushtinPhase=2; resetForNextThrow(); return; }
+    if (g.ushtinPhase===2 && g.pickedTotal===4) { completeStage(); return; }
+    fail('Күтпеген қате'); return;
+  }
+
+  // Stage 10 crash: must have had at least one collision
+  if (s.special==='crash' && !g.crashHit) {
+    fail('Соқтығысу болмады! Сарт-сұрт ережесі бұзылды!');
+    return;
+  }
+
+  const totalNeeded = TOTAL;
+  if (g.pickedTotal >= totalNeeded) {
+    completeStage();
+  } else if (s.throws>1 && g.throwNum < s.throws) {
+    resetForNextThrow();
+  } else {
+    fail('Жеткіліксіз асық жиналды!');
+  }
+}
+
+function resetForNextThrow() {
+  // Remove picked asyks, re-build remaining on field
+  const remaining = TOTAL - g.pickedTotal;
+  if (remaining <= 0) { completeStage(); return; }
+
+  g.phase = 'idle';
+  g.pickedThrow = 0;
+  $btnThrow.disabled = false;
+  if ($gameBtnThrow) $gameBtnThrow.disabled = false;
+  $slider.disabled = false;
+  $btnCatch.style.display = 'none';
+  if ($gameBtnCatch) $gameBtnCatch.style.display = 'none';
+
+  // Rebuild only remaining asyks
+  document.querySelectorAll('.asyk').forEach(e=>e.remove());
+  const fw=$game.clientWidth,fh=$game.clientHeight;
+  const cx=fw/2-AW/2,cy=fh/2-AH/2, R=32;
+  for (let i=0;i<remaining;i++) {
+    const angle=(i/remaining)*Math.PI*2-Math.PI/2;
+    const el=makeAsyk(i);
+    el.style.left=(cx+Math.cos(angle)*R)+'px';
+    el.style.top =(cy+Math.sin(angle)*R)+'px';
+    el.style.transition='none';
+    $game.appendChild(el);
+  }
+  updateHUD();
+  setMsg('Жақсы! Жалғастырыңыз.', 'green');
+  setSubMsg('Келесі лақтыруға дайын.');
+}
+
+/* ══════════════════════════════════════
+   STAGE COMPLETE
+══════════════════════════════════════ */
+function completeStage() {
+  g.phase = 'done';
+  stopAtalik();
+  hideBar();
+
+  if (g.stageIdx >= STAGES.length-1) {
+    const scoreMsg = g.scoreVal > 0 ? ' Ұпай: ' + g.scoreVal + '!' : '';
+    setMsg('Жеңіс!', 'green');
+    setTimeout(()=>showOverlay(true,'Жеңіс!','🏆 Барлық 13 кезеңді аяқтадың!' + scoreMsg,'Қайта ойнау'), 700);
+  } else {
+    setMsg('Дұрыс! ' + stage().name + ' аяқталды! 🎉', 'green');
+    setSubMsg('Келесі кезеңге өту...');
+    setTimeout(nextStage, 1300);
+  }
+}
+
+function nextStage() {
+  g.stageIdx++;
+  g.phase='idle'; g.pickedTotal=0; g.throwNum=0; g.pickedThrow=0;
+  g.jalakTaps=0; g.atalikLanded=false; g.ushtinPhase=1;
+  g.swapMoved=false; g.silentOk=true; g.crashHit=false;
+  g.karsuSeqIdx=0; g.nabiNudges=0; g.scoreVal=0; g.scoreCaught=false;
+  if (g.karsuTickId) { clearInterval(g.karsuTickId); g.karsuTickId=null; }
+  stopAtalik();
+  document.querySelectorAll('.asyk,.tap-dot,.nudge-arrow').forEach(e=>e.remove());
+  buildCluster();
+  updateHUD(); updateDots();
+  $btnThrow.disabled=false; $slider.disabled=false;
+  if ($gameBtnThrow) $gameBtnThrow.disabled=false;
+  $btnCatch.style.display='none';
+  if ($gameBtnCatch) $gameBtnCatch.style.display='none';
+  setMsg('Жаңа кезең: ' + stage().name);
+  setSubMsg(getStageHint());
+}
+
+/* ══════════════════════════════════════
+   FAIL
+══════════════════════════════════════ */
+function fail(reason) {
+  g.phase='done';
+  killTimers(); stopAtalik(); hideBar();
+  if (g.karsuTickId) { clearInterval(g.karsuTickId); g.karsuTickId=null; }
+  $slider.disabled=false;
+  $btnCatch.style.display='none'; $btnCatch.onclick=null;
+  if ($gameBtnCatch) $gameBtnCatch.style.display='none';
+
+  document.querySelectorAll('.asyk').forEach(el=>{
+    el.classList.remove('clickable','picked');
+    el.classList.add('wrong');
+  });
+  document.querySelectorAll('.tap-dot,.nudge-arrow,.score-display').forEach(e=>e.remove());
+
+  setMsg('Жеңілдің', 'red');
+  setSubMsg(reason);
+  setTimeout(()=>showOverlay(false,'Жеңілдің',reason,'Қайта бастау'), 800);
+}
+
+/* ══════════════════════════════════════
+   OVERLAY
+══════════════════════════════════════ */
+function showOverlay(win, title, sub, btnText) {
+  $ovEmoji.textContent = win?'🏆':'😔';
+  $ovTitle.textContent = title; $ovTitle.className=win?'win':'lose';
+  $ovSub.textContent = sub;
+  $ovBtn.textContent = '🔄 ' + btnText;
+  $overlay.classList.add('show');
+}
+
+function handleOverlayBtn() {
+  $overlay.classList.remove('show');
+  killTimers(); stopAtalik(); hideBar();
+  if (g.karsuTickId) { clearInterval(g.karsuTickId); g.karsuTickId=null; }
+  $btnCatch.onclick = null;
+
+  g = freshState();
+  document.querySelectorAll('.asyk,.tap-dot,.nudge-arrow').forEach(e=>e.remove());
+  buildCluster(); updateHUD(); updateDots();
+  $btnThrow.disabled=false; $slider.disabled=false;
+  if ($gameBtnThrow) $gameBtnThrow.disabled=false;
+  $btnCatch.style.display='none';
+  if ($gameBtnCatch) $gameBtnCatch.style.display='none';
+  setMsg('«Лақтыру» батырмасын басыңыз!');
+  setSubMsg(getStageHint());
+}
+
+/* ══════════════════════════════════════
+   STAGE 8 — АСЫҚ АЛМАСТЫРУ (SWAP)
+   Ойыншы асықтарды жылжытады (drag-style click-move).
+   Егер екі асық қабысса → жеңілді.
+   Барлығын жылжытқан соң → жинайды.
+══════════════════════════════════════ */
+function startSwapStage() {
+  setMsg('Асықтарды жылжытыңыз!', 'purple');
+  setSubMsg('Бір-біріне тигізбеңіз! Жылжытқан соң «Ұстау» басыңыз.');
+  g.swapMoved = false;
+  let selected = null;
+
+  document.querySelectorAll('.asyk').forEach(el => {
+    el.classList.add('clickable');
+    el.addEventListener('click', function swapClick() {
+      if (g.phase !== 'active') return;
+      if (selected === null) {
+        selected = el;
+        el.classList.add('swap-selected');
+        setSubMsg('Таңдалды. Екінші асыққа басыңыз — орын алмастырылады.');
+      } else if (selected === el) {
+        selected = null;
+        el.classList.remove('swap-selected');
+        setSubMsg('Бір-біріне тигізбеңіз! Жылжытқан соң «Ұстау» басыңыз.');
+      } else {
+        // Swap positions with animation
+        const ax = selected.style.left, ay = selected.style.top;
+        selected.style.transition = 'left .25s, top .25s';
+        el.style.transition = 'left .25s, top .25s';
+        selected.style.left = el.style.left; selected.style.top = el.style.top;
+        el.style.left = ax; el.style.top = ay;
+        selected.classList.remove('swap-selected');
+        selected = null;
+        g.swapMoved = true;
+        // Collision check after animation settles
+        setTimeout(() => {
+          if (detectAnyCollision()) {
+            fail('Асықтар соқтығысты! Алмастыру сәтсіз!');
+          } else {
+            setSubMsg('Жақсы! Жалғастыра беріңіз немесе «Ұстау» басыңыз.');
+          }
+        }, 300);
+      }
+    });
+  });
+
+  $btnCatch.style.display = 'inline-block';
+  $btnCatch.disabled = false;
+  $btnCatch.onclick = function() {
+    if (!g.swapMoved) { setMsg('Алдымен асықтарды жылжытыңыз!', 'red'); return; }
+    document.querySelectorAll('.asyk').forEach(el => {
+      el.classList.remove('clickable', 'swap-selected');
+      el.classList.add('picked');
+    });
+    g.pickedTotal = TOTAL;
+    g.phase = 'catch';
+    doCatch();
+  };
+}
+
+/* ══════════════════════════════════════
+   COLLISION HELPERS
+══════════════════════════════════════ */
+function getAsykRect(el) {
+  const x = parseFloat(el.style.left), y = parseFloat(el.style.top);
+  return { x, y, cx: x+AW/2, cy: y+AH/2, r: AW/2 - 6 };
+}
+
+function detectAnyCollision() {
+  const els = [...document.querySelectorAll('.asyk:not(.picked):not(.wrong)')];
+  for (let i=0;i<els.length;i++) {
+    for (let j=i+1;j<els.length;j++) {
+      const a=getAsykRect(els[i]), b=getAsykRect(els[j]);
+      if (Math.hypot(a.cx-b.cx, a.cy-b.cy) < a.r+b.r) return true;
+    }
+  }
+  return false;
+}
+
+function checkAsykCollision(pickedEl) {
+  // Check picked asyk against all unpicked
+  const a = getAsykRect(pickedEl);
+  const others = [...document.querySelectorAll('.asyk:not(.picked):not(.wrong)')].filter(e=>e!==pickedEl);
+  return others.some(el => {
+    const b=getAsykRect(el);
+    return Math.hypot(a.cx-b.cx, a.cy-b.cy) < a.r+b.r;
+  });
+}
+
+function triggerCrashEffect(el) {
+  // Visual impact flash
+  el.style.transition = 'transform .12s';
+  el.style.transform  = 'scale(1.35)';
+  setTimeout(()=>{ el.style.transform=''; }, 150);
+  // Nudge all neighbours
+  const a = getAsykRect(el);
+  document.querySelectorAll('.asyk:not(.picked)').forEach(other => {
+    if (other===el) return;
+    const b=getAsykRect(other);
+    const dist=Math.hypot(a.cx-b.cx,a.cy-b.cy);
+    if (dist < a.r+b.r+20) {
+      const dx=(b.cx-a.cx)/dist*18, dy=(b.cy-a.cy)/dist*18;
+      other.style.transition='left .18s,top .18s';
+      other.style.left=(parseFloat(other.style.left)+dx)+'px';
+      other.style.top =(parseFloat(other.style.top)+dy)+'px';
+    }
+  });
+}
+
+/* ══════════════════════════════════════
+   STAGE 9 — ҮНДЕМЕС (SILENT)
+   Соқтығыссыз жинау.
+══════════════════════════════════════ */
+function startSilentStage() {
+  setMsg('Тыныш жинаңыз!');
+  setSubMsg('Асықтар бір-біріне тимей жинаңыз!');
+  document.querySelectorAll('.asyk').forEach(el => el.classList.add('clickable'));
+}
+
+/* ══════════════════════════════════════
+   STAGE 10 — САРТ-СҰРТ (CRASH)
+   Жинағанда соқтығыстыру керек.
+══════════════════════════════════════ */
+function startCrashStage() {
+  setMsg('Соқтырыстырыңыз!', 'purple');
+  setSubMsg('Асықты алғанда оны басқасына тигізіңіз!');
+  g.crashHit = false;
+  document.querySelectorAll('.asyk').forEach(el => el.classList.add('clickable'));
+}
+
+/* ══════════════════════════════════════
+   STAGE 11 — ҚАРШУ (KARSU)
+   Дәйекті жылдам жинау — нөмірмен белгіленеді.
+══════════════════════════════════════ */
+function startKarsuStage() {
+  setMsg('Дәйекті жинаңыз!');
+  setSubMsg('Асықтарды реттілікте жылдам жинаңыз!');
+  g.karsuSeqIdx = 0;
+  const els = [...document.querySelectorAll('.asyk')];
+
+  // Number the asyks in random sequence
+  const order = els.map((_,i)=>i).sort(()=>Math.random()-.5);
+  els.forEach((el,i) => {
+    const seqNum = order.indexOf(i) + 1;
+    el.dataset.karsuOrder = seqNum;
+    // Show number label on asyk
+    const lbl = document.createElement('span');
+    lbl.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:900;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.7);pointer-events:none;';
+    lbl.textContent = seqNum;
+    el.appendChild(lbl);
+    if (seqNum === 1) el.classList.add('clickable');
+  });
+}
+
+function karsuOnPick(idx, el) {
+  const expected = parseInt(el.dataset.karsuOrder);
+  const current  = g.karsuSeqIdx + 1;
+  if (expected !== current) {
+    fail('Қате реттілік! ' + current + '-ні алу керек еді!');
+    return true; // handled
+  }
+  g.karsuSeqIdx++;
+  g.pickedTotal++;
+  g.pickedThrow++;
+  el.classList.remove('clickable');
+  el.classList.add('picked');
+  updateHUD();
+
+  // Enable next in sequence
+  const next = g.karsuSeqIdx + 1;
+  document.querySelectorAll('.asyk:not(.picked)').forEach(e => {
+    if (parseInt(e.dataset.karsuOrder) === next) e.classList.add('clickable');
+  });
+
+  if (g.pickedTotal >= TOTAL) {
+    killTimers(); activateCatch();
+  }
+  return true;
+}
+
+/* ══════════════════════════════════════
+   STAGE 12 — НӘБИ (NABI)
+   Асықтарды итеріп жылжыту (коллекциялау емес).
+══════════════════════════════════════ */
+function startNabiStage() {
+  g.nabiNudges = 0;
+  g.nabiGoal   = TOTAL * 2; // 8 nudge
+  setMsg('Асықтарды итеріңіз!', 'purple');
+  setSubMsg('Барлық асықты шетке дейін итеріңіз (' + g.nabiGoal + ' рет).');
+
+  document.querySelectorAll('.asyk').forEach(el => {
+    el.classList.add('clickable');
+    el.addEventListener('click', function nabiClick() {
+      if (g.phase !== 'active') return;
+      // Nudge: move asyk away from center
+      const fw=$game.clientWidth,fh=$game.clientHeight;
+      const cx=fw/2, cy=fh/2;
+      const ax=parseFloat(el.style.left)+AW/2, ay=parseFloat(el.style.top)+AH/2;
+      const dx=ax-cx, dy=ay-cy;
+      const dist=Math.hypot(dx,dy)||1;
+      const nx=parseFloat(el.style.left)+dx/dist*30;
+      const ny=parseFloat(el.style.top) +dy/dist*30;
+      // Clamp to field
+      el.style.transition='left .15s,top .15s';
+      el.style.left=Math.max(PAD, Math.min(fw-AW-PAD, nx))+'px';
+      el.style.top =Math.max(PAD, Math.min(fh-AH-PAD, ny))+'px';
+      // Rotation bump
+      const img=el.querySelector('img');
+      const cur=parseFloat(img.style.transform.replace(/[^0-9.\-]/g,'')||'0');
+      img.style.transform='rotate('+(cur+(Math.random()>0.5?30:-30))+'deg)';
+
+      g.nabiNudges++;
+      setSubMsg('Итеру: ' + g.nabiNudges + ' / ' + g.nabiGoal);
+      if (g.nabiNudges >= g.nabiGoal) {
+        killTimers();
+        setMsg('Жарайды! Нәби аяқталды!', 'green');
+        setTimeout(completeStage, 800);
+      }
+    });
+  });
+}
+
+/* ══════════════════════════════════════
+   STAGE 13 — ҰПАЙ ЖИНАУ (SCORE)
+   Лақтыру → кездейсоқ N асық жатады →
+   ойыншы «Ұстау» бассаңыз → ұпай есептеледі.
+══════════════════════════════════════ */
+function startScoreStage() {
+  const caught = 1 + Math.floor(Math.random() * TOTAL); // 1–4
+  g.scoreVal = caught * 10;
+  g.scoreCaught = false;
+
+  // Visually mark which asyks are "caught on hand"
+  const allAsyns = [...document.querySelectorAll('.asyk')];
+  allAsyns.forEach((el, i) => {
+    if (i < caught) el.classList.add('score-caught');
+  });
+
+  // Show score banner inside game area
+  document.querySelectorAll('.score-display').forEach(e=>e.remove());
+  const banner = document.createElement('div');
+  banner.className = 'score-display';
+  banner.textContent = caught + ' асық = ' + g.scoreVal + ' ұпай';
+  $game.appendChild(banner);
+
+  setMsg('Қолыңызда ' + caught + ' асық!', 'green');
+  setSubMsg('«Ұстау» батырмасын басып жинаңыз!');
+  updateHUD();
+
+  $btnCatch.style.display = 'inline-block';
+  $btnCatch.disabled = false;
+  $btnCatch.onclick = function() {
+    g.scoreCaught = true;
+    g.pickedTotal = TOTAL;
+    killTimers(); stopAtalik(); hideBar();
+    $btnCatch.style.display = 'none';
+    $btnCatch.onclick = null;
+    document.querySelectorAll('.score-display').forEach(e=>e.remove());
+    setMsg('🏆 Ұпай: ' + g.scoreVal, 'green');
+    setSubMsg(caught + ' асық ұстадыңыз!');
+    updateHUD();
+    setTimeout(completeStage, 1200);
+  };
+}
+
+/* ══════════════════════════════════════
+   ДЕҢГЕЙ ТАҢДАУ — нүктеге басу арқылы
+══════════════════════════════════════ */
+function selectStage(idx) {
+  if (g.phase !== 'idle' && g.phase !== 'done') {
+    setMsg('Алдымен ойынды аяқтаңыз!', 'red');
+    return;
+  }
+  killTimers(); stopAtalik(); hideBar();
+  if (g.karsuTickId) { clearInterval(g.karsuTickId); g.karsuTickId=null; }
+  $overlay.classList.remove('show');
+  $btnCatch.onclick = null;
+
+  g = freshState();
+  g.stageIdx = idx;
+  document.querySelectorAll('.asyk,.tap-dot,.nudge-arrow').forEach(e => e.remove());
+  buildCluster();
+  updateHUD(); updateDots();
+  $btnThrow.disabled = false;
+  $slider.disabled = false;
+  $btnCatch.style.display = 'none';
+  setMsg(STAGES[idx].name + ' деңгейі таңдалды!', 'green');
+  setSubMsg(getStageHint());
+}
+
+/* ══════════════════════════════════════
+   ЕРЕЖЕ ЖҮЙЕСІ — деңгей → қысқа ереже
+══════════════════════════════════════ */
+const LEVEL_RULES = [
+  '1. Бірлік: аталықты лақтырып, жердегі 1 асықты жинаңыз. Осыны 4 рет қайталаңыз.',
+  '2. Екілік: аталықты лақтырып, жердегі асықтарды 2-ден жинаңыз (2 лақтыру).',
+  '3. Үштік: 1-лақтыру — 3 асық, 2-лақтыру — 1 асық жинаңыз.',
+  '4. Төрттік: аталық жоғарыда болғанда барлық 4 асықты бірден жинаңыз.',
+  '5. Жалақ: 4 асықты жинап, бір саусақпен жерді 3 рет жалаңыз.',
+  '6. Алақан: аталықты лақтырып, 4 асықты қолды қозғалтпай дәйекті жинаңыз.',
+  '7. Төртбұрыш: шаршы орналасқан 4 асықты бір уысқа бірден жинаңыз.',
+  '8. Асық алмастыру: асықтарды тигізбей орын алмастырып, соңында жинаңыз.',
+  '9. Үндемес: асықтар бір-біріне соғылып дыбыс шығармауы тиіс.',
+  '10. Сарт-сұрт: жинағанда асықтарды әдейі соқтырыстырыңыз.',
+  '11. Қаршу: асықтарды нөмір ретімен өте жылдам дәйекті жинаңыз.',
+  '12. Нәби: асықтарды жинамайсыз — итеріп шетке жылжытыңыз.',
+  '13. Ұпай жинау: аталықты лақтырыңыз, кездейсоқ асықтар «қолыңызда» — «Ұстау» басыңыз!',
+];
+
+function updateRulePanel() {
+  const $rt = document.getElementById('rule-text');
+  if ($rt) $rt.textContent = LEVEL_RULES[g.stageIdx] || '';
+}
+
+function openRules()  { document.getElementById('rules-modal').classList.add('open'); }
+function closeRules() { document.getElementById('rules-modal').classList.remove('open'); }
+
+/* ══════════════════════════════════════
+   BOOT
+══════════════════════════════════════ */
+buildCluster();
+updateHUD();
+updateDots();
+updateRulePanel();
+setSubMsg(getStageHint());
+</script>
+</body>
+</html>
